@@ -252,7 +252,16 @@ const MCQ = [
   why:"One WITH per query, CTEs separated by commas, no comma before the final SELECT, and every CTE needs AS."}
 ];
 
-const DEFAULT_EXPECTED = {a1_orders:"", a1_aov:"", a2_nd:"2965", a2_fast:""};
+/* Exact results of the model answers on olist_dw (verified: 'not delivered' = 2,965 matches the Day 2 audit) */
+const DEFAULT_EXPECTED = {a1_orders:"5513", a1_aov:"131.69", a2_nd:"2965", a2_fast:"30.9"};
+/* Known wrong values → the mistake behind them (shown in the SQL answers tab) */
+const MISTAKES = {
+  a1_orders:{"5442":"BETWEEN … '2017-12-31' drops orders placed during 31 Dec","5624":"order_status = 'delivered' filter missing"},
+  a1_aov:{"117.35":"AVG(price) on items: average item price, not order value","131.86":"BETWEEN … '2017-12-31' drops 31 Dec","132.27":"order_status = 'delivered' filter missing"},
+  a2_nd:{"0":"IS NULL branch missing: undelivered orders fall into ELSE 'slow'"},
+  a2_fast:{"0":"Integer division: use 100.0 instead of 100","30.0":"Integer division before rounding","30.87":"Not rounded to 1 decimal"}
+};
+const mistakeOf=(k,v)=>{const m=MISTAKES[k]||{};const n=normNum(v);for(const x in m)if(normNum(x)===n)return m[x];return ""};
 const K = atob("YWNkZGNhYmJkYQ==").split("").map(c=>c.charCodeAt(0)-97);
 const KEY = {}; MCQ.forEach((q,i)=>KEY[q.id]=K[i]);
 const FIELDS = W.flatMap(w=>w.fields.map(f=>({...f,qid:w.id})));
@@ -515,7 +524,8 @@ function renderDone(){
 }
 
 /* ---------- Grader (instructor) ---------- */
-let G={text:"",tab:"results",sort:"score",rows:[],exp:Object.assign({},DEFAULT_EXPECTED,load(CFG_KEY)||{})};
+const savedExp=Object.fromEntries(Object.entries(load(CFG_KEY)||{}).filter(([k,v])=>String(v==null?"":v).trim()!==""));
+let G={text:"",tab:"results",sort:"score",rows:[],exp:Object.assign({},DEFAULT_EXPECTED,savedExp)};
 async function decodeAll(){
   const codes=[...new Set((G.text.match(CODE_SCAN)||[]))];
   const parsed=(await Promise.all(codes.map(parseCode))).filter(Boolean);
@@ -585,7 +595,7 @@ function renderPane(){
       <div class="row" style="justify-content:space-between"><b>${esc(r.name)}</b><span class="muted">Part A ${r.wpts}/${W_TOTAL} · Total ${r.score}/${TOTAL}</span></div>
       <div class="sqlgrid">
         ${W.map(w=>`<div class="stack" style="gap:6px;min-width:0"><span class="eyebrow">Q${w.id} · ${esc(w.topic)}</span><pre>${esc(r.w["sql"+w.id])||"<span class='na'>(no query)</span>"}</pre>
-          <div class="ans">${w.fields.map(f=>`${esc(f.label)} <b>${esc(r.w[f.k])||"–"}</b> ${mark(r.wm[f.k])}`).join(" · ")}</div></div>`).join("")}
+          <div class="ans">${w.fields.map(f=>{const why=r.wm[f.k]===false?mistakeOf(f.k,r.w[f.k]):"";return `${esc(f.label)} <b>${esc(r.w[f.k])||"–"}</b> ${mark(r.wm[f.k])}${why?` <span class="pill w">${esc(why)}</span>`:""}`}).join(" · ")}</div></div>`).join("")}
       </div></div>`).join(""):`<div class="card muted">No result codes yet.</div>`;
     pane.querySelectorAll(".sqlcard pre").forEach(p=>{p.style.whiteSpace="pre-wrap";p.style.wordBreak="break-word"});
   }else if(G.tab==="questions"){
