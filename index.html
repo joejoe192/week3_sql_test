@@ -1,0 +1,614 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>SQL Screening Test · Week 3</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+[hidden]{display:none!important}body{margin:0}img{max-width:100%}
+:root{
+  --bg:#f3f5f8; --surface:#ffffff; --fg:#17202b; --muted:#5b6878; --line:#d8dee7;
+  --accent:#2f5d8a; --accent-ink:#ffffff; --accent-soft:#e3ecf6;
+  --code-bg:#eef2f7; --good:#1f7a4d; --good-soft:#e1f2e9; --bad:#b4372f; --bad-soft:#f8e3e1;
+  --warn:#a86207; --warn-soft:#fbefd9; --flag:#7a4bb0;
+  --f-ui:"Instrument Sans", "Segoe UI", system-ui, sans-serif;
+  --f-code:"JetBrains Mono", ui-monospace, "Cascadia Mono", Consolas, monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0f141b; --surface:#171e27; --fg:#e4e9f0; --muted:#97a3b3; --line:#2a3442;
+  --accent:#6fa3d6; --accent-ink:#0c1520; --accent-soft:#1d2d40;
+  --code-bg:#1d2632; --good:#5cc08b; --good-soft:#163024; --bad:#ec7a70; --bad-soft:#3a1d1b;
+  --warn:#e2a64a; --warn-soft:#352711; --flag:#b48ce6; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f141b; --surface:#171e27; --fg:#e4e9f0; --muted:#97a3b3; --line:#2a3442;
+  --accent:#6fa3d6; --accent-ink:#0c1520; --accent-soft:#1d2d40;
+  --code-bg:#1d2632; --good:#5cc08b; --good-soft:#163024; --bad:#ec7a70; --bad-soft:#3a1d1b;
+  --warn:#e2a64a; --warn-soft:#352711; --flag:#b48ce6; color-scheme:dark}
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-ui);font-size:15px;line-height:1.55}
+.wrap{max-width:1040px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:24px 48px}
+h1,h2,h3{text-wrap:balance;line-height:1.2;margin:0}
+h1{font-size:1.9rem;font-weight:700;letter-spacing:-.01em}
+h2{font-size:1.25rem;font-weight:600}
+.eyebrow{font-size:.75rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.muted{color:var(--muted)}
+code,pre{font-family:var(--f-code);font-size:.86rem}
+code{background:var(--code-bg);padding:.1em .35em;border-radius:4px}
+pre{background:var(--code-bg);padding:12px 14px;border-radius:8px;overflow-x:auto;margin:0;line-height:1.5;white-space:pre}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:24px}
+button{font:inherit;cursor:pointer;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--fg);padding:10px 16px;font-weight:600}
+button:focus-visible,input:focus-visible,textarea:focus-visible,.opt:focus-within{outline:2px solid var(--accent);outline-offset:2px}
+button.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+button.ghost{background:transparent}
+button:disabled{opacity:.45;cursor:not-allowed}
+input[type=text],textarea{font:inherit;width:100%;padding:10px 12px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--fg)}
+textarea{font-family:var(--f-code);font-size:.85rem;min-height:140px;resize:vertical}
+.row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.stack{display:flex;flex-direction:column;gap:16px}
+
+/* Start screen */
+.start{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:24px;align-items:start}
+.facts{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.fact{border-top:2px solid var(--accent);padding-top:8px}
+.fact b{display:block;font-size:1.5rem;font-variant-numeric:tabular-nums}
+.rules{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px}
+.chip{font-size:.78rem;padding:3px 9px;border-radius:999px;background:var(--accent-soft);color:var(--fg);font-weight:500}
+
+/* Exam */
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--surface);border-bottom:1px solid var(--line)}
+.bar .inner{max-width:1040px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:10px;display:flex;gap:16px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.who{font-weight:600}
+.timer{font-family:var(--f-code);font-size:1.35rem;font-weight:600;font-variant-numeric:tabular-nums;padding:4px 12px;border-radius:8px;background:var(--accent-soft)}
+.timer.low{background:var(--warn-soft);color:var(--warn)}
+.timer.crit{background:var(--bad-soft);color:var(--bad)}
+.progress{height:4px;background:var(--line)}
+.progress span{display:block;height:100%;background:var(--accent);width:0;transition:width .2s}
+.exam{display:grid;grid-template-columns:minmax(0,1fr) 220px;gap:24px;align-items:start}
+.qhead{display:flex;justify-content:space-between;gap:12px;align-items:baseline;flex-wrap:wrap}
+.qtext{font-size:1.08rem;font-weight:500;max-width:68ch}
+.opts{display:flex;flex-direction:column;gap:10px}
+.opt{display:flex;gap:12px;align-items:flex-start;border:1px solid var(--line);border-radius:10px;padding:12px 14px;cursor:pointer;background:var(--surface);min-width:0}
+.opt:hover{border-color:var(--accent)}
+.opt input{position:absolute;opacity:0;pointer-events:none}
+.opt .key{flex:none;width:28px;height:28px;border-radius:6px;border:1px solid var(--line);display:grid;place-items:center;font-weight:700;font-size:.85rem}
+.opt .body{min-width:0;flex:1}
+.opt .body pre{margin-top:2px}
+.opt.sel{border-color:var(--accent);background:var(--accent-soft)}
+.opt.sel .key{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.nav{position:sticky;top:84px}
+.grid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.grid button{padding:8px 0;font-size:.85rem;font-variant-numeric:tabular-nums;font-weight:600}
+.grid button.done{background:var(--accent-soft);border-color:var(--accent)}
+.grid button.cur{outline:2px solid var(--fg);outline-offset:1px}
+.grid button.flag{box-shadow:inset 0 -3px 0 var(--flag)}
+.legend{display:flex;flex-direction:column;gap:4px;font-size:.8rem;color:var(--muted)}
+.sw{display:inline-block;width:12px;height:12px;border-radius:3px;vertical-align:-2px;margin-right:6px;border:1px solid var(--line)}
+.flagbtn.on{color:var(--flag);border-color:var(--flag)}
+.notice{padding:12px 14px;border-radius:10px;background:var(--warn-soft);color:var(--fg);border:1px solid var(--warn)}
+.qtext table{border-collapse:collapse;margin:10px 0;font-size:.92rem;width:auto}
+.qtext table th,.qtext table td{white-space:normal;cursor:default}
+
+/* Done */
+.codebox{font-family:var(--f-code);font-size:1rem;word-break:break-all;padding:14px;border-radius:10px;background:var(--code-bg);border:1px dashed var(--accent);user-select:all}
+.score{font-size:3rem;font-weight:700;font-variant-numeric:tabular-nums;line-height:1}
+
+/* Grader */
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:10px}
+table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums;font-size:.88rem}
+th,td{padding:8px 10px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}
+th{font-size:.72rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600;background:var(--bg);cursor:pointer}
+td.c,th.c{text-align:center}
+.ok{color:var(--good);font-weight:700}.no{color:var(--bad);font-weight:700}.na{color:var(--muted)}
+.pill{display:inline-block;padding:2px 8px;border-radius:999px;font-size:.78rem;font-weight:600;background:var(--accent-soft);color:var(--fg)}
+.pill.g{background:var(--good-soft);color:var(--good)}.pill.w{background:var(--warn-soft);color:var(--warn)}.pill.b{background:var(--bad-soft);color:var(--bad)}
+.qstat{display:grid;grid-template-columns:40px minmax(0,1fr) 120px 48px;gap:10px;align-items:center;padding:6px 0;border-bottom:1px solid var(--line);font-size:.88rem}
+.meter{height:8px;background:var(--line);border-radius:4px;overflow:hidden}
+.meter span{display:block;height:100%;background:var(--accent)}
+.meter.lo span{background:var(--bad)}
+details.key{border-top:1px solid var(--line);padding:14px 0}
+details.key summary{cursor:pointer;font-weight:600}
+.explain{border-left:3px solid var(--good);padding:6px 12px;margin-top:10px;background:var(--good-soft);border-radius:0 8px 8px 0}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);overflow-x:auto}
+.tabs button{border:none;border-bottom:2px solid transparent;border-radius:0;background:transparent;color:var(--muted);white-space:nowrap}
+.tabs button[aria-selected="true"]{color:var(--fg);border-bottom-color:var(--accent)}
+
+.modal{position:fixed;inset:0;background:rgba(10,15,22,.55);display:grid;place-items:center;z-index:20;padding:16px}
+.modal .card{max-width:440px;width:100%}
+
+.parts{display:flex;flex-direction:column;gap:8px}
+.parts>div{display:flex;flex-direction:column;border-left:3px solid var(--accent);padding-left:10px}
+textarea.sql{min-height:170px;font-size:.88rem;line-height:1.5;tab-size:2}
+.fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.ul{margin:6px 0 8px;padding-left:22px}
+.grid button.wq{border-style:dashed;border-color:var(--warn)}
+.grid button.wq.done{background:var(--accent-soft);border-color:var(--accent);border-style:solid}
+details.expected summary{cursor:pointer}
+details.expected[open] summary{margin-bottom:12px}
+.expgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin-bottom:8px}
+.sqlgrid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}
+.sqlcard{margin-bottom:12px}
+.ans{font-size:.88rem;font-variant-numeric:tabular-nums}
+
+@media (max-width:820px){
+  .start,.exam{grid-template-columns:minmax(0,1fr)}
+  .nav{position:static;order:-1}
+  .grid{grid-template-columns:repeat(6,1fr)}
+  .facts{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .qstat{grid-template-columns:32px minmax(0,1fr) 70px 40px}
+  .sqlgrid{grid-template-columns:minmax(0,1fr)}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+(function(){
+"use strict";
+const TEST_ID = "SQLW3";
+const DURATION_MIN = 20;
+const STORE_KEY = "sqlw3-attempt-v1";
+const CFG_KEY = "sqlw3-grader-expected-v1";
+const SALT = "olist-w3-v1-cte-null-date";
+const MCQ_PTS = 2;
+
+/* ---------- Part A · Write & run SQL ---------- */
+const W = [
+ {id:1, topic:"CTEs & date ranges", points:10,
+  html:`The business team wants the <b>average order value</b> for each month of 2017, counting only <b>delivered</b> orders. Order value is the sum of <code>price</code> for all items in the order.
+  <ul class="ul"><li>One row per purchase month in 2017, sorted by month</li><li><code>month</code> formatted as <code>'YYYY-MM'</code></li><li><code>orders</code>: the number of delivered orders</li><li><code>avg_order_value</code>: rounded to 2 decimals</li></ul>
+  Use <b>at least two CTEs</b>. Make sure orders placed late on 31 December are included. Run your query on <code>olist_dw</code>, then enter the values for <b>2017-12</b>:`,
+  fields:[
+    {k:"a1_orders",label:"2017-12 · orders",ph:"number",kind:"num",pts:5},
+    {k:"a1_aov",label:"2017-12 · avg_order_value",ph:"e.g. 123.45",kind:"num",pts:5}],
+  model:"WITH order_revenue AS (          -- step 1: one row per order\n  SELECT order_id, SUM(price) AS revenue\n  FROM raw.order_items\n  GROUP BY order_id\n),\ndelivered_2017 AS (              -- step 2: delivered orders in 2017\n  SELECT DATE_TRUNC('month', o.order_purchase_timestamp) AS month,\n         r.revenue\n  FROM raw.orders o\n  JOIN order_revenue r USING (order_id)\n  WHERE o.order_status = 'delivered'\n    AND o.order_purchase_timestamp >= '2017-01-01'\n    AND o.order_purchase_timestamp <  '2018-01-01'\n)\nSELECT TO_CHAR(month, 'YYYY-MM') AS month,\n       COUNT(*)                  AS orders,\n       ROUND(AVG(revenue), 2)    AS avg_order_value\nFROM delivered_2017\nGROUP BY month\nORDER BY month;",
+  why:"Marking (10 pts): order totals built before averaging (4) · half-open range, not BETWEEN (3) · group by DATE_TRUNC, format with TO_CHAR at the end (2) · two named CTEs (1). The 2017-12 values catch the two classic mistakes: BETWEEN … '2017-12-31' drops orders placed during 31 December (orders too low), and AVG(price) on items gives the average item price, not the order value."},
+ {id:2, topic:"NULL-safe CASE", points:10,
+  html:`Classify <b>every order in <code>raw.orders</code></b>, whatever its status, into one bucket:
+  <table><thead><tr><th>Bucket</th><th>Rule</th></tr></thead><tbody>
+  <tr><td><code>not delivered</code></td><td><code>order_delivered_customer_date</code> is NULL</td></tr>
+  <tr><td><code>fast</code></td><td>7 days or less from purchase to delivery</td></tr>
+  <tr><td><code>normal</code></td><td>8 to 14 days</td></tr>
+  <tr><td><code>slow</code></td><td>more than 14 days</td></tr></tbody></table>
+  Return <code>delivery_bucket</code>, <code>orders</code> and <code>pct_of_orders</code> (share of <b>all</b> orders, rounded to 1 decimal), largest first. Calculate the grand total with a <b>subquery</b>, not a window function. Run it on <code>olist_dw</code>, then enter:`,
+  fields:[
+    {k:"a2_nd",label:"'not delivered' · orders",ph:"number",kind:"num",pts:5},
+    {k:"a2_fast",label:"'fast' · pct_of_orders",ph:"e.g. 12.3",kind:"num",pts:5}],
+  model:"SELECT\n  CASE\n    WHEN order_delivered_customer_date IS NULL THEN 'not delivered'\n    WHEN order_delivered_customer_date::date\n         - order_purchase_timestamp::date <= 7  THEN 'fast'\n    WHEN order_delivered_customer_date::date\n         - order_purchase_timestamp::date <= 14 THEN 'normal'\n    ELSE 'slow'\n  END AS delivery_bucket,\n  COUNT(*) AS orders,\n  ROUND(100.0 * COUNT(*) / (SELECT COUNT(*) FROM raw.orders), 1) AS pct_of_orders\nFROM raw.orders\nGROUP BY delivery_bucket\nORDER BY orders DESC;",
+  why:"Marking (10 pts): IS NULL tested first (3) · date − date for days (2) · grand total from a scalar subquery (2) · 100.0 to avoid integer division (2) · GROUP BY / ORDER BY (1). Without the IS NULL branch, undelivered orders fail every comparison and land in ELSE 'slow', so there is no 'not delivered' row. Without 100.0, integer division makes every percentage 0. The 'not delivered' count should match the Day 2 NULL audit: 2,965."}
+];
+
+/* ---------- Part B · Multiple choice ---------- */
+const MCQ = [
+ {id:3, topic:"Date ranges", day:"D2",
+  text:"Which <code>WHERE</code> clause includes every order purchased in 2017?",
+  opts:[
+   {code:"order_purchase_timestamp >= '2017-01-01'\n  AND order_purchase_timestamp <  '2018-01-01'"},
+   {code:"order_purchase_timestamp BETWEEN '2017-01-01' AND '2017-12-31'"},
+   {code:"order_purchase_timestamp >= '2017-01-01'\n  AND order_purchase_timestamp <= '2017-12-31'"},
+   {code:"order_purchase_timestamp::date >  '2017-01-01'\n  AND order_purchase_timestamp::date <  '2017-12-31'"}],
+  why:"'2017-12-31' means 00:00:00 on that day, so BETWEEN and <= miss everything later on 31 December. The ::date version with > and < drops both the first and the last day. The half-open range is always correct."},
+ {id:4, topic:"Derived tables", day:"D1",
+  text:"Which query returns the correct <b>average order value</b>? (An order can contain several items.)",
+  opts:[
+   {code:"SELECT AVG(price) FROM raw.order_items;"},
+   {code:"SELECT AVG(SUM(price))\nFROM raw.order_items\nGROUP BY order_id;"},
+   {code:"SELECT AVG(total)\nFROM (SELECT order_id, SUM(price) AS total\n      FROM raw.order_items\n      GROUP BY order_id) AS t;"},
+   {code:"SELECT SUM(price) / COUNT(*) FROM raw.order_items;"}],
+  why:"AVG(price) and SUM(price)/COUNT(*) average items, not orders. Aggregates can't be nested, so AVG(SUM(price)) is an error. Build one total per order in a derived table, then average."},
+ {id:5, topic:"NOT IN & NULL", day:"D1",
+  text:"What does this query return?",
+  code:"SELECT 'found' WHERE 5 NOT IN (1, 2, NULL);",
+  opts:["One row: 'found'","An error","One row containing NULL","Zero rows"],
+  why:"5 <> NULL is unknown, so the whole NOT IN is unknown and WHERE drops the row. Use NOT EXISTS when the list can contain NULL."},
+ {id:6, topic:"Aggregates & NULL", day:"D2",
+  text:"<code>review_score</code> has three rows: 4, NULL, 2. What do <code>COUNT(*)</code>, <code>COUNT(review_score)</code> and <code>AVG(review_score)</code> return?",
+  opts:["3, 3, 2","3, 2, 2","2, 2, 3","3, 2, 3"],
+  why:"COUNT(*) counts rows (3). COUNT(col) skips NULLs (2). AVG also skips NULLs: (4 + 2) / 2 = 3."},
+ {id:7, topic:"COALESCE", day:"D2",
+  text:"<code>product_weight_g</code> is an INTEGER. What happens with this query?",
+  code:"SELECT COALESCE(product_weight_g, 'unknown')\nFROM raw.products;",
+  opts:["NULL weights show 'unknown'","NULL weights show 0","Error: invalid input syntax for type integer","Every row shows 'unknown'"],
+  why:"All COALESCE arguments must share one type, and the result type comes from the integer column. Fix: COALESCE(product_weight_g::text, 'unknown')."},
+ {id:8, topic:"CASE & NULL", day:"D2",
+  text:"A row has <code>price = NULL</code>. Which tier does it get?",
+  code:"CASE WHEN price < 50  THEN 'low'\n     WHEN price < 200 THEN 'mid'\n     ELSE 'high' END",
+  opts:["'high'","'low'","NULL","An error"],
+  why:"Every comparison with NULL is unknown, so no WHEN is true and the row falls into ELSE. Put WHEN price IS NULL THEN 'missing' first."},
+ {id:9, topic:"Scalar subquery", day:"D1",
+  text:"Which query fails with <code>more than one row returned by a subquery used as an expression</code>?",
+  opts:[
+   {code:"SELECT order_id, price\nFROM raw.order_items\nWHERE price > (SELECT AVG(price)\n               FROM raw.order_items);"},
+   {code:"SELECT order_id, price\nFROM raw.order_items\nWHERE price > (SELECT AVG(price)\n               FROM raw.order_items\n               GROUP BY seller_id);"},
+   {code:"SELECT COUNT(*)\nFROM raw.orders\nWHERE customer_id IN (SELECT customer_id\n                      FROM raw.customers\n                      WHERE customer_state = 'RJ');"},
+   {code:"SELECT order_id\nFROM raw.orders o\nWHERE EXISTS (SELECT 1\n              FROM raw.order_reviews r\n              WHERE r.order_id = o.order_id);"}],
+  why:"A subquery after > must return exactly one value. GROUP BY seller_id returns one average per seller, so many rows. IN and EXISTS are allowed to return many rows."},
+ {id:10, topic:"Numeric types", day:"D2",
+  text:"<code>geolocation_lat</code> is DOUBLE PRECISION. Which expression works?",
+  opts:[
+   {code:"ROUND(geolocation_lat, 3)"},
+   {code:"ROUND(geolocation_lat::numeric, 3)"},
+   {code:"ROUND(geolocation_lat::int, 3)"},
+   {code:"TRUNC(geolocation_lat::text, 3)"}],
+  why:"ROUND(double precision, integer) doesn't exist in PostgreSQL, so cast to numeric first. Casting to int runs, but it throws away the decimals before rounding."},
+ {id:11, topic:"Grouping by month", day:"D2",
+  text:"You want monthly order counts across <b>2017–2018</b>, in date order. Which is correct?",
+  opts:[
+   {code:"GROUP BY TO_CHAR(ts, 'Mon') ORDER BY 1"},
+   {code:"GROUP BY EXTRACT(MONTH FROM ts) ORDER BY 1"},
+   {code:"GROUP BY ts::date ORDER BY 1"},
+   {code:"GROUP BY DATE_TRUNC('month', ts) ORDER BY 1"}],
+  why:"TO_CHAR month names sort alphabetically (Apr, Aug, …). EXTRACT(MONTH) merges January 2017 with January 2018. ts::date groups by day. DATE_TRUNC keeps the year and sorts correctly."},
+ {id:12, topic:"CTE syntax", day:"D1",
+  text:"Which query uses two CTEs correctly?",
+  opts:[
+   {code:"WITH order_revenue AS (SELECT ...),\n     delivered AS (SELECT ...)\nSELECT * FROM delivered;"},
+   {code:"WITH order_revenue AS (SELECT ...),\nWITH delivered AS (SELECT ...)\nSELECT * FROM delivered;"},
+   {code:"WITH order_revenue AS (SELECT ...),\n     delivered AS (SELECT ...),\nSELECT * FROM delivered;"},
+   {code:"WITH order_revenue (SELECT ...),\n     delivered (SELECT ...)\nSELECT * FROM delivered;"}],
+  why:"One WITH per query, CTEs separated by commas, no comma before the final SELECT, and every CTE needs AS."}
+];
+
+const DEFAULT_EXPECTED = {a1_orders:"", a1_aov:"", a2_nd:"2965", a2_fast:""};
+const K = atob("YWNkZGNhYmJkYQ==").split("").map(c=>c.charCodeAt(0)-97);
+const KEY = {}; MCQ.forEach((q,i)=>KEY[q.id]=K[i]);
+const FIELDS = W.flatMap(w=>w.fields.map(f=>({...f,qid:w.id})));
+const W_TOTAL = W.reduce((n,w)=>n+w.points,0);
+const MCQ_TOTAL = MCQ.length*MCQ_PTS;
+const TOTAL = W_TOTAL + MCQ_TOTAL;
+const PASS = 28;
+const L = ["A","B","C","D"];
+
+/* ---------- Helpers ---------- */
+const $ = (s,el=document)=>el.querySelector(s);
+const esc = s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const fmt = sec=>{sec=Math.max(0,Math.round(sec));return String(Math.floor(sec/60)).padStart(2,"0")+":"+String(sec%60).padStart(2,"0")};
+function load(k){try{return JSON.parse(localStorage.getItem(k)||"null")}catch(e){return null}}
+function store(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+function clearStore(){try{localStorage.removeItem(STORE_KEY)}catch(e){}}
+function hash(str){let h=2166136261;for(let i=0;i<str.length;i++){h^=str.charCodeAt(i);h=Math.imul(h,16777619)}return (h>>>0).toString(36).padStart(6,"0").slice(-6)}
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function bytesToB64(b){let s="";for(let i=0;i<b.length;i++)s+=String.fromCharCode(b[i]);return btoa(s).replace(/\+/g,"_").replace(/\//g,".").replace(/=+$/,"")}
+function b64ToBytes(s){s=s.replace(/_/g,"+").replace(/\./g,"/");while(s.length%4)s+="=";const bin=atob(s);const b=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)b[i]=bin.charCodeAt(i);return b}
+async function pipe(bytes,stream){const r=new Response(new Blob([bytes]).stream().pipeThrough(stream));return new Uint8Array(await r.arrayBuffer())}
+async function pack(str){
+  const raw=new TextEncoder().encode(str);
+  try{if(typeof CompressionStream!=="undefined"){const z=await pipe(raw,new CompressionStream("deflate-raw"));if(z.length<raw.length)return "z"+bytesToB64(z)}}catch(e){}
+  return "p"+bytesToB64(raw);
+}
+async function unpack(s){
+  const kind=s[0],b=b64ToBytes(s.slice(1));
+  if(kind==="z")return new TextDecoder().decode(await pipe(b,new DecompressionStream("deflate-raw")));
+  return new TextDecoder().decode(b);
+}
+const squash = sql=>String(sql||"").replace(/--[^\n]*/g,"").replace(/\s+/g," ").trim();
+const normNum = v=>String(v==null?"":v).replace(/[\s,%]/g,"").replace(/(\.\d*?)0+$/,"$1").replace(/\.$/,"");
+const normTxt = v=>String(v==null?"":v).trim().toLowerCase().replace(/\s+/g,"_");
+const optHtml = o=>typeof o==="string"?esc(o):`<pre>${esc(o.code)}</pre>`;
+
+/* ---------- Result code ---------- */
+const CODE_RE = new RegExp("^"+TEST_ID+"-([zp][A-Za-z0-9_.]+)-([0-9a-z]{6})$");
+const CODE_SCAN = new RegExp(TEST_ID+"-[zp][A-Za-z0-9_.]+-[0-9a-z]{6}","g");
+async function makeCode(st){
+  const ans=MCQ.map(q=>st.answers[q.id]==null?"-":"abcd"[st.answers[q.id]]).join("");
+  const used=Math.round(Math.min(DURATION_MIN*60,(st.submittedAt-st.startedAt)/1000));
+  const w=st.written||{};
+  const arr=[st.name,ans,used,st.leaves||0,st.submittedAt,st.auto?1:0,
+    ...FIELDS.map(f=>(w[f.k]||"").trim()),
+    ...W.map(x=>squash(w["sql"+x.id]).slice(0,900))];
+  const payload=JSON.stringify(arr);
+  return TEST_ID+"-"+(await pack(payload))+"-"+hash(SALT+payload);
+}
+async function parseCode(code){
+  const m=CODE_RE.exec(code.trim());
+  if(!m)return null;
+  let payload;try{payload=await unpack(m[1])}catch(e){return null}
+  let a;try{a=JSON.parse(payload)}catch(e){return null}
+  if(!Array.isArray(a)||a.length<6+FIELDS.length+W.length)return null;
+  const answers={};MCQ.forEach((q,i)=>{const c=a[1][i];answers[q.id]=(c&&c!=="-")?"abcd".indexOf(c):null});
+  const w={};FIELDS.forEach((f,i)=>w[f.k]=a[6+i]);W.forEach((x,i)=>w["sql"+x.id]=a[6+FIELDS.length+i]);
+  return {name:String(a[0]),answers,used:+a[2],leaves:+a[3],at:+a[4],auto:a[5]===1,w,
+    valid:hash(SALT+payload)===m[2],code:code.trim()};
+}
+function mcqScore(answers){return MCQ.reduce((n,q)=>n+(answers[q.id]===KEY[q.id]?MCQ_PTS:0),0)}
+function writtenMarks(w,exp){
+  const out={};
+  FIELDS.forEach(f=>{const e=exp[f.k];out[f.k]=(e==null||String(e).trim()==="")?null:(f.kind==="num"?normNum(w[f.k])===normNum(e):normTxt(w[f.k])===normTxt(e))});
+  return out;
+}
+const writtenPts = wm=>FIELDS.reduce((n,f)=>n+(wm[f.k]===true?f.pts:0),0);
+
+/* ---------- State ---------- */
+let S = load(STORE_KEY) || {phase:"start"};
+let timerId=null;
+const app=$("#app");
+const save=()=>store(STORE_KEY,S);
+
+function render(){
+  clearInterval(timerId);
+  if(location.hash==="#grader"){renderGrader();return}
+  if(location.hash==="#reset"){clearStore();S={phase:"start"};history.replaceState(null,"",location.pathname+location.search)}
+  if(S.phase==="exam")renderExam();
+  else if(S.phase==="done")renderDone();
+  else renderStart();
+}
+
+/* ---------- Start ---------- */
+function renderStart(){
+  app.innerHTML=`
+  <div class="wrap stack">
+    <div class="eyebrow">Data Engineering Fundamentals · Module 2 · Week 3 screening</div>
+    <div class="start">
+      <div class="card stack">
+        <h1>SQL Screening Test · Week 3</h1>
+        <p class="muted" style="margin:0;max-width:60ch">Subqueries, CTEs, data types, NULLs and dates. This test works like the SQL assessment in a real data engineering hiring process, and every question uses the Olist tables.</p>
+        <div class="facts">
+          <div class="fact"><b>${MCQ.length+W.length}</b><span class="muted">questions</span></div>
+          <div class="fact"><b>${DURATION_MIN}</b><span class="muted">minutes</span></div>
+          <div class="fact"><b>${TOTAL}</b><span class="muted">points</span></div>
+        </div>
+        <div class="parts">
+          <div><b>Part A · Write &amp; run SQL</b><span class="muted">${W.length} questions · ${W[0].points} points each · run your query on olist_dw and enter the result</span></div>
+          <div><b>Part B · Multiple choice</b><span class="muted">${MCQ.length} questions · ${MCQ_PTS} points each</span></div>
+        </div>
+      </div>
+      <div class="card stack">
+        <h2>Before you start</h2>
+        <ol class="rules">
+          <li>Keep your camera on in Zoom for the whole test.</li>
+          <li>Open psql (or pgAdmin) connected to <code>olist_dw</code> now. You may use it for <b>Part A only</b>.</li>
+          <li>No notes, slides or AI tools.</li>
+          <li>Stay on this tab during Part B. Leaving the tab is recorded.</li>
+          <li>The timer can't be paused. At 00:00 your answers are submitted automatically.</li>
+          <li>When you finish, copy your result code into the Zoom chat.</li>
+        </ol>
+        <label for="cand" class="eyebrow">Your full name</label>
+        <input type="text" id="cand" autocomplete="name" placeholder="e.g. Aung Min Thu" maxlength="60">
+        <button class="primary" id="go" disabled>Start the test</button>
+      </div>
+    </div>
+  </div>`;
+  const inp=$("#cand"),go=$("#go");
+  inp.addEventListener("input",()=>go.disabled=inp.value.trim().length<2);
+  inp.addEventListener("keydown",e=>{if(e.key==="Enter"&&!go.disabled)go.click()});
+  go.addEventListener("click",()=>{
+    S={phase:"exam",name:inp.value.trim(),order:[...W.map(w=>w.id),...shuffle(MCQ.map(q=>q.id))],cur:0,answers:{},written:{},flags:{},leaves:0,startedAt:Date.now()};
+    save();render();
+  });
+}
+
+/* ---------- Exam ---------- */
+const findQ=id=>MCQ.find(q=>q.id===id)||W.find(w=>w.id===id);
+const isW=id=>W.some(w=>w.id===id);
+function isDone(id){
+  if(!isW(id))return S.answers[id]!=null;
+  const w=W.find(x=>x.id===id),v=S.written||{};
+  return !!(v["sql"+id]||"").trim() && w.fields.every(f=>(v[f.k]||"").trim());
+}
+function remaining(){return DURATION_MIN*60-(Date.now()-S.startedAt)/1000}
+function renderExam(){
+  if(remaining()<=0){submit(true);return}
+  const qid=S.order[S.cur], q=findQ(qid), written=isW(qid);
+  const done=S.order.filter(isDone).length;
+  const part=written?`<span class="pill w">Part A · psql allowed</span>`:`<span class="pill">Part B</span>`;
+  let body;
+  if(!written){
+    body=`<div class="qtext">${q.text}</div>
+      ${q.code?`<pre>${esc(q.code)}</pre>`:""}
+      <div class="opts" role="radiogroup" aria-label="Answer options">
+        ${q.opts.map((o,i)=>`<label class="opt ${S.answers[qid]===i?"sel":""}">
+          <input type="radio" name="q${qid}" value="${i}" ${S.answers[qid]===i?"checked":""}>
+          <span class="key">${L[i]}</span>
+          <span class="body">${optHtml(o)}</span></label>`).join("")}
+      </div>`;
+  }else{
+    const v=S.written||{};
+    body=`<div class="qtext">${q.html}</div>
+      <div class="stack" style="gap:6px">
+        <label class="eyebrow" for="sql${qid}">1. Paste your query</label>
+        <textarea id="sql${qid}" class="sql" spellcheck="false" maxlength="1500" placeholder="WITH ... AS (&#10;  SELECT ...&#10;)&#10;SELECT ...">${esc(v["sql"+qid]||"")}</textarea>
+      </div>
+      <div class="fields">
+        ${q.fields.map((f,i)=>`<div class="stack" style="gap:6px"><label class="eyebrow" for="f_${f.k}">${i+2}. ${esc(f.label)}</label>
+          <input type="text" id="f_${f.k}" data-k="${f.k}" ${f.kind==="num"?'inputmode="decimal"':""} placeholder="${esc(f.ph)}" value="${esc(v[f.k]||"")}" autocomplete="off"></div>`).join("")}
+      </div>
+      <p class="muted" style="margin:0;font-size:.85rem">Type the numbers exactly as your query returns them. Your answers save as you type.</p>`;
+  }
+  app.innerHTML=`
+  <div class="bar"><div class="inner">
+    <div><div class="eyebrow">Candidate</div><div class="who">${esc(S.name)}</div></div>
+    <div class="row"><span class="muted" id="cnt" style="font-variant-numeric:tabular-nums">${done}/${S.order.length} answered</span><div class="timer" id="timer" role="timer" aria-live="off">${fmt(remaining())}</div></div>
+  </div><div class="progress"><span id="prog" style="width:${done/S.order.length*100}%"></span></div></div>
+  <div class="wrap">
+    ${S.leaves?`<div class="notice" style="margin-bottom:16px">You left this tab ${S.leaves} time${S.leaves>1?"s":""} during Part B. This is included in your result.</div>`:""}
+    <div class="exam">
+      <div class="card stack">
+        <div class="qhead"><span class="eyebrow">Question ${S.cur+1} of ${S.order.length} · ${q.topic} · ${written?q.points:MCQ_PTS} points</span>
+          <div class="row" style="gap:8px">${part}<button class="ghost flagbtn ${S.flags[qid]?"on":""}" id="flag" aria-pressed="${!!S.flags[qid]}">${S.flags[qid]?"Flagged":"Flag for review"}</button></div></div>
+        ${body}
+        <div class="row" style="justify-content:space-between">
+          <button id="prev" ${S.cur===0?"disabled":""}>Previous</button>
+          ${S.cur<S.order.length-1?`<button class="primary" id="next">Next</button>`:`<button class="primary" id="finish">Review &amp; submit</button>`}
+        </div>
+      </div>
+      <aside class="card stack nav" aria-label="Question navigator">
+        <span class="eyebrow">Questions</span>
+        <div class="grid">${S.order.map((id,i)=>`<button data-i="${i}" class="${isDone(id)?"done":""} ${i===S.cur?"cur":""} ${S.flags[id]?"flag":""} ${isW(id)?"wq":""}" aria-label="Question ${i+1}">${i+1}</button>`).join("")}</div>
+        <div class="legend"><span><i class="sw" style="background:var(--accent-soft);border-color:var(--accent)"></i>Answered</span><span><i class="sw" style="box-shadow:inset 0 -3px 0 var(--flag)"></i>Flagged</span><span><i class="sw" style="border-style:dashed;border-color:var(--warn)"></i>Write &amp; run SQL</span></div>
+        <button id="finish2">Submit test</button>
+      </aside>
+    </div>
+  </div>`;
+  app.querySelectorAll(".opt input").forEach(r=>r.addEventListener("change",()=>{S.answers[qid]=+r.value;save();renderExam()}));
+  if(written){
+    const upd=()=>{save();const d=S.order.filter(isDone).length;$("#cnt").textContent=`${d}/${S.order.length} answered`;$("#prog").style.width=(d/S.order.length*100)+"%";
+      app.querySelectorAll(".grid button").forEach(b=>b.classList.toggle("done",isDone(S.order[+b.dataset.i])))};
+    $("#sql"+qid).addEventListener("input",e=>{S.written["sql"+qid]=e.target.value;upd()});
+    app.querySelectorAll(".fields input").forEach(i=>i.addEventListener("input",()=>{S.written[i.dataset.k]=i.value;upd()}));
+  }
+  $("#flag").onclick=()=>{S.flags[qid]=!S.flags[qid];save();renderExam()};
+  $("#prev").onclick=()=>{S.cur--;save();renderExam()};
+  const n=$("#next");if(n)n.onclick=()=>{S.cur++;save();renderExam()};
+  const f=$("#finish");if(f)f.onclick=confirmSubmit;
+  $("#finish2").onclick=confirmSubmit;
+  app.querySelectorAll(".grid button").forEach(b=>b.onclick=()=>{S.cur=+b.dataset.i;save();renderExam()});
+  tick();timerId=setInterval(tick,1000);
+}
+function tick(){
+  const r=remaining(),t=$("#timer");
+  if(r<=0){submit(true);return}
+  if(t){t.textContent=fmt(r);t.className="timer"+(r<=60?" crit":r<=300?" low":"")}
+}
+function confirmSubmit(){
+  const blank=S.order.filter(id=>!isDone(id)).length;
+  const flagged=Object.values(S.flags).filter(Boolean).length;
+  const m=document.createElement("div");m.className="modal";
+  m.innerHTML=`<div class="card stack" role="dialog" aria-modal="true" aria-labelledby="mt">
+    <h2 id="mt">Submit your test?</h2>
+    <p style="margin:0">${blank?`<b>${blank}</b> question${blank>1?"s are":" is"} not complete. `:"All questions are answered. "}${flagged?`${flagged} flagged for review. `:""}You can't change answers after submitting.</p>
+    <div class="row" style="justify-content:flex-end"><button id="mc">Keep working</button><button class="primary" id="ms">Submit</button></div></div>`;
+  document.body.appendChild(m);
+  $("#mc",m).onclick=()=>m.remove();
+  $("#ms",m).onclick=()=>{m.remove();submit(false)};
+  $("#ms",m).focus();
+}
+async function submit(auto){
+  if(S.phase!=="exam")return;
+  clearInterval(timerId);
+  S.phase="done";S.auto=auto;S.submittedAt=Math.min(Date.now(),S.startedAt+DURATION_MIN*60000);
+  S.code=await makeCode(S);save();
+  render();
+}
+document.addEventListener("visibilitychange",()=>{
+  if(S.phase!=="exam")return;
+  const onPartB=!isW(S.order[S.cur]);
+  if(document.hidden&&onPartB){S.leaves=(S.leaves||0)+1;save()}
+  else if(!document.hidden)renderExam();
+});
+
+/* ---------- Done ---------- */
+function renderDone(){
+  if(!S.code){makeCode(S).then(c=>{S.code=c;save();renderDone()});return}
+  const sc=mcqScore(S.answers);
+  app.innerHTML=`
+  <div class="wrap stack" style="max-width:680px">
+    <div class="eyebrow">Test submitted${S.auto?" · time ran out":""}</div>
+    <div class="card stack">
+      <h1>Thank you, ${esc(S.name)}</h1>
+      <div class="row" style="align-items:flex-end;gap:24px">
+        <div><div class="score">${sc}<span class="muted" style="font-size:1.4rem">/${MCQ_TOTAL}</span></div><span class="muted">Part B score</span></div>
+        <div class="muted" style="max-width:34ch">Part A (write &amp; run SQL) is checked by your instructor.<br>Time used ${fmt((S.submittedAt-S.startedAt)/1000)}</div>
+      </div>
+      <p style="margin:0">Copy your result code and paste it into the <b>Zoom chat</b> as one message. It includes your SQL answers.</p>
+      <div class="codebox" id="code">${esc(S.code)}</div>
+      <div class="row"><button class="primary" id="copy">Copy result code</button><span class="muted" id="copied" aria-live="polite"></span></div>
+    </div>
+  </div>`;
+  $("#copy").onclick=()=>{
+    const done=()=>$("#copied").textContent="Copied. Paste it into the Zoom chat.";
+    const fallback=()=>{const r=document.createRange();r.selectNodeContents($("#code"));const s=getSelection();s.removeAllRanges();s.addRange(r);$("#copied").textContent="Selected. Press Ctrl+C (or ⌘C) to copy."};
+    try{navigator.clipboard.writeText(S.code).then(done,fallback)}catch(e){fallback()}
+  };
+}
+
+/* ---------- Grader (instructor) ---------- */
+let G={text:"",tab:"results",sort:"score",rows:[],exp:Object.assign({},DEFAULT_EXPECTED,load(CFG_KEY)||{})};
+async function decodeAll(){
+  const codes=[...new Set((G.text.match(CODE_SCAN)||[]))];
+  const parsed=(await Promise.all(codes.map(parseCode))).filter(Boolean);
+  const byName={};parsed.forEach(r=>{const k=r.name.toLowerCase();if(!byName[k]||r.at>byName[k].at)byName[k]=r});
+  G.rows=Object.values(byName);
+}
+function scored(){
+  return G.rows.map(r=>{const wm=writtenMarks(r.w,G.exp);const wpts=writtenPts(wm);const m=mcqScore(r.answers);return {...r,wm,mcq:m,wpts,score:m+wpts}});
+}
+function renderGrader(){
+  const unset=FIELDS.some(f=>!String(G.exp[f.k]||"").trim());
+  app.innerHTML=`
+  <div class="wrap stack">
+    <div class="row" style="justify-content:space-between">
+      <div><div class="eyebrow">Instructor view · Week 3</div><h1>SQL Screening Results</h1></div>
+      <a href="#" id="back" class="muted">Back to test page</a>
+    </div>
+    <div class="card stack">
+      <label for="paste" class="eyebrow">Paste the Zoom chat (or any text containing result codes)</label>
+      <textarea id="paste" placeholder="Copy the whole Zoom chat and paste it here. Codes start with ${TEST_ID}-">${esc(G.text)}</textarea>
+      <div class="row muted" id="summary"></div>
+    </div>
+    <details class="card expected" ${unset?"open":""}>
+      <summary><b>Expected answers for Part A</b> <span class="muted">· run the model answers on olist_dw and fill these in</span></summary>
+      <div class="expgrid">
+        ${FIELDS.map(f=>`<div class="stack" style="gap:4px"><label class="eyebrow" for="e_${f.k}">Q${f.qid} · ${esc(f.label)}</label><input type="text" id="e_${f.k}" data-k="${f.k}" value="${esc(G.exp[f.k])}" placeholder="not set"></div>`).join("")}
+      </div>
+      <p class="muted" style="margin:0;font-size:.85rem">Each correct value is worth 5 points. An empty box is not scored. Numbers ignore commas, spaces, % and trailing zeros. Read the SQL tab to give partial credit.</p>
+    </details>
+    <div class="tabs" role="tablist">
+      ${[["results","Candidates"],["sql","SQL answers"],["questions","By question"],["key","Answer key"]].map(([k,t])=>`<button role="tab" aria-selected="${G.tab===k}" data-tab="${k}">${t}</button>`).join("")}
+    </div>
+    <div id="pane"></div>
+  </div>`;
+  let deb;
+  $("#paste").addEventListener("input",e=>{G.text=e.target.value;clearTimeout(deb);deb=setTimeout(async()=>{await decodeAll();renderPane()},250)});
+  app.querySelectorAll(".expgrid input").forEach(i=>i.addEventListener("input",()=>{G.exp[i.dataset.k]=i.value;store(CFG_KEY,G.exp);renderPane()}));
+  app.querySelectorAll("[data-tab]").forEach(b=>b.onclick=()=>{G.tab=b.dataset.tab;app.querySelectorAll("[data-tab]").forEach(x=>x.setAttribute("aria-selected",x===b));renderPane()});
+  $("#back").onclick=e=>{e.preventDefault();history.replaceState(null,"",location.pathname+location.search);render()};
+  renderPane();
+}
+const mark=v=>v===true?`<span class="ok">✓</span>`:v===false?`<span class="no">✗</span>`:`<span class="na">·</span>`;
+function renderPane(){
+  const pane=$("#pane");if(!pane)return;
+  let rows=scored();
+  rows.sort(G.sort==="name"?(a,b)=>a.name.localeCompare(b.name):G.sort==="time"?(a,b)=>a.used-b.used:(a,b)=>b.score-a.score||a.used-b.used);
+  const avg=rows.length?rows.reduce((n,r)=>n+r.score,0)/rows.length:0;
+  $("#summary").innerHTML=`<span><b style="color:var(--fg)">${rows.length}</b> candidate${rows.length===1?"":"s"}</span>${rows.length?`<span>Average <b style="color:var(--fg)">${avg.toFixed(1)}/${TOTAL}</b></span><span>Pass mark ${PASS}/${TOTAL}: <b style="color:var(--fg)">${rows.filter(r=>r.score>=PASS).length}</b> passed</span>`:""}`;
+  const band=s=>s/TOTAL>=.8?"g":s/TOTAL>=.6?"w":"b";
+  if(G.tab==="results"){
+    pane.innerHTML=rows.length?`<div class="tablewrap"><table>
+      <thead><tr><th data-s="name">Candidate</th><th data-s="score" class="c">Total</th><th class="c">Part A</th><th class="c">Part B</th><th data-s="time" class="c">Time</th><th class="c">Tab left</th>${W.map(w=>`<th class="c">Q${w.id}</th>`).join("")}${MCQ.map(q=>`<th class="c" title="${esc(q.topic)}">Q${q.id}</th>`).join("")}<th>Check</th></tr></thead>
+      <tbody>${rows.map(r=>`<tr>
+        <td>${esc(r.name)}</td>
+        <td class="c"><span class="pill ${band(r.score)}">${r.score}/${TOTAL}</span></td>
+        <td class="c">${r.wpts}/${W_TOTAL}</td><td class="c">${r.mcq}/${MCQ_TOTAL}</td>
+        <td class="c">${fmt(r.used)}${r.auto?" ⏱":""}</td>
+        <td class="c">${r.leaves?`<span class="pill w">${r.leaves}×</span>`:"0"}</td>
+        ${W.map(w=>`<td class="c">${w.fields.map(f=>mark(r.wm[f.k])).join("")}</td>`).join("")}
+        ${MCQ.map(q=>{const a=r.answers[q.id];return a==null?`<td class="c na">–</td>`:a===KEY[q.id]?`<td class="c ok">✓</td>`:`<td class="c no">${L[a]}</td>`}).join("")}
+        <td>${r.valid?`<span class="muted">OK</span>`:`<span class="pill b">Edited code</span>`}</td></tr>`).join("")}</tbody></table></div>
+      <p class="muted" style="margin:8px 0 0;font-size:.85rem">Q1 shows 2017-12 orders, avg_order_value. Q2 shows 'not delivered' orders, 'fast' %. (· = expected value not set). A red letter is the wrong option chosen. ⏱ means time ran out.</p>`
+      :`<div class="card muted">No result codes yet. Paste the Zoom chat above when students have submitted.</div>`;
+    pane.querySelectorAll("th[data-s]").forEach(th=>th.onclick=()=>{G.sort=th.dataset.s;renderPane()});
+  }else if(G.tab==="sql"){
+    pane.innerHTML=rows.length?rows.map(r=>`<div class="card stack sqlcard">
+      <div class="row" style="justify-content:space-between"><b>${esc(r.name)}</b><span class="muted">Part A ${r.wpts}/${W_TOTAL} · Total ${r.score}/${TOTAL}</span></div>
+      <div class="sqlgrid">
+        ${W.map(w=>`<div class="stack" style="gap:6px;min-width:0"><span class="eyebrow">Q${w.id} · ${esc(w.topic)}</span><pre>${esc(r.w["sql"+w.id])||"<span class='na'>(no query)</span>"}</pre>
+          <div class="ans">${w.fields.map(f=>`${esc(f.label)} <b>${esc(r.w[f.k])||"–"}</b> ${mark(r.wm[f.k])}`).join(" · ")}</div></div>`).join("")}
+      </div></div>`).join(""):`<div class="card muted">No result codes yet.</div>`;
+    pane.querySelectorAll(".sqlcard pre").forEach(p=>{p.style.whiteSpace="pre-wrap";p.style.wordBreak="break-word"});
+  }else if(G.tab==="questions"){
+    const stats=[
+      ...W.map(w=>({id:w.id,label:"Write & run SQL",txt:w.topic+" (all values correct)",pct:rows.length?rows.filter(r=>w.fields.every(f=>r.wm[f.k])).length/rows.length:0})),
+      ...MCQ.map(q=>({id:q.id,label:q.topic,txt:q.text.replace(/<[^>]+>/g,""),pct:rows.length?rows.filter(r=>r.answers[q.id]===KEY[q.id]).length/rows.length:0}))];
+    pane.innerHTML=`<div class="card">${stats.map(s=>`<div class="qstat"><b>Q${s.id}</b><span style="min-width:0">${esc(s.label)}<span class="muted"> · ${esc(s.txt.slice(0,70))}${s.txt.length>70?"…":""}</span></span><div class="meter ${s.pct<.5?"lo":""}"><span style="width:${s.pct*100}%"></span></div><span style="text-align:right">${rows.length?Math.round(s.pct*100)+"%":"–"}</span></div>`).join("")}
+    <p class="muted" style="margin:10px 0 0;font-size:.85rem">Questions under 50% (red) are the ones to go through first in the debrief.</p></div>`;
+  }else{
+    pane.innerHTML=`<div class="card">
+      ${W.map(w=>`<details class="key"><summary>Q${w.id} · Write &amp; run SQL · ${esc(w.topic)} · ${w.points} points</summary>
+      <div class="stack" style="margin-top:10px"><div class="qtext">${w.html}</div><span class="eyebrow">Model answer</span><pre>${esc(w.model)}</pre>
+      <div class="explain">${esc(w.why)}</div></div></details>`).join("")}
+      ${MCQ.map(q=>`<details class="key"><summary>Q${q.id} · ${esc(q.topic)} · Answer ${L[KEY[q.id]]}</summary>
+      <div class="stack" style="margin-top:10px"><div class="qtext">${q.text}</div>${q.code?`<pre>${esc(q.code)}</pre>`:""}
+      <div class="opts">${q.opts.map((o,i)=>`<div class="opt ${i===KEY[q.id]?"sel":""}" style="cursor:default"><span class="key">${L[i]}</span><span class="body">${optHtml(o)}</span></div>`).join("")}</div>
+      <div class="explain">${esc(q.why)}</div></div></details>`).join("")}</div>`;
+  }
+}
+window.addEventListener("hashchange",render);
+
+render();
+})();
+</script>
+</body>
+</html>
